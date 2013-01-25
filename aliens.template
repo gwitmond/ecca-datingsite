@@ -1,0 +1,12 @@
+<html><body>
+{{ template "menu" }}
+<h1>These aliens are in stock</h1>
+<p>Please browse through the list of aliens and take your pick<p>
+<p>Click on the name to write a Vogon Poem</p>
+<table>
+<tr><th>Alien<th><th>Race</th><th>Occupation</th></tr>
+{{ range $_, $alien := .aliens }}
+<tr><td><a href="/send-message?addressee={{ $alien.CN }}">{{ $alien.CN }}</a><td><td>{{ $alien.GetRace }}</td><td>{{ $alien.GetOccupation }}</td></tr>
+{{ end }}
+</table>
+</body></html>

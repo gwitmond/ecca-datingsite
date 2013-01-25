@@ -1,0 +1,8 @@
+<html><body>
+{{ template "menu" }}
+
+<h1>The univere's most secure dating site</h1>
+
+
+<p>This dating site shows what security and privacy benefits can be had 
+when you ditch passwords and use cryptography instead.</p>

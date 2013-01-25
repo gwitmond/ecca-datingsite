@@ -1,0 +1,11 @@
+<html><body>
+{{ template "menu" }}
+<h1>Messages</h1>
+<p>These are the messages you have received</p>
+<table>
+<tr><th>Alien<th><th>Message</th></tr>
+{{ range $index, $message := .messages }} 
+<tr><td>{{ $message.FromCN }}<td><td>{{ $message.Ciphertext }}</td></tr>
+{{ end }}
+</table>
+</body></html>

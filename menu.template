@@ -1,0 +1,8 @@
+{{ define "menu" }}
+<ul>
+<li><a href="/">Home planet</a></li>
+<li><a href="/aliens">The aliens</a></li>
+<li><a href="/profile">Your profile</a></li>
+<li><a href="/read-messages">Read messages</a></li>
+</ul>
+{{ end }}
