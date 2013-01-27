@@ -23,23 +23,19 @@ import (
 var homePageTemplate = template.Must(template.ParseFiles("homepage.template", "menu.template")) 
 
 func homePage(w http.ResponseWriter, req *http.Request) {
-	// w.Header().Set("Content-Type", "text/html")
 	err := homePageTemplate.Execute(w, nil) 
 	check(err)
-	//w.Write([]byte("<p>This is an example server.</p>"))
 }
 
 var editProfileTemplate = template.Must(template.ParseFiles("editProfile.template", "menu.template"))
 
 func editProfile(w http.ResponseWriter, req *http.Request) {
-	// check to see if logged in
 	if len(req.TLS.PeerCertificates) == 0 {
-		// Not logged in. Send to register-site.
 		sendToLogin(w, req)
 		return
 	}
 
-	// User is logged in	// check to see if logged in
+	// User is logged in
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
@@ -80,7 +76,9 @@ func showProfiles (w http.ResponseWriter, req *http.Request) {
 	return
 }
 
+
 var readMessageTemplate = template.Must(template.ParseFiles("readMessage.template", "menu.template"))
+
 // readMessages shows you the messages other aliens have sent.
 func readMessages (w http.ResponseWriter, req *http.Request) {
 	log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
@@ -102,15 +100,6 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 		}) 
 		check(err)
 		return
-		//case "POST":
-		//	req.ParseForm()
-		//	saveAlien(Alien{
-		//		CN: cn,
-		//		Race: req.Form.Get("race"),
-		//		Occupation: req.Form.Get("occupation"),
-		//	})
-		//	w.Write([]byte(`<html><p>Thank you for your entry. <a href="/aliens">Show all aliens.</a></p></html>`))
-		//	return
 	default: panic("Unexpected method")
 	}
 	return
@@ -120,9 +109,7 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 var sendMessageTemplate = template.Must(template.ParseFiles("sendMessage.template", "menu.template"))
 
 func sendMessage(w http.ResponseWriter, req *http.Request) {
-	// check to see if logged in
 	if len(req.TLS.PeerCertificates) == 0 {
-		// Not logged in. Send to register-site.
 		sendToLogin(w, req)
 		return
 	}
@@ -132,9 +119,12 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET": 
 		req.ParseForm()
+		toCN := req.Form.Get("addressee")
+ 		//w.Header().Set("Eccentric-Authentication", "encryption=\"required\"")
 		err := sendMessageTemplate.Execute(w, map[string]interface{}{
 			"CN": cn,
-			"ToCN": req.Form.Get("addressee"),
+			"ToCN": toCN,
+			"ToURL": "https://register-dating.wtmnd.nl:10444/get-certificate?nickname=" + toCN,
 		})
 		check(err)
 		return
@@ -168,6 +158,7 @@ func main() {
 	http.HandleFunc("/read-messages", readMessages)
 	http.HandleFunc("/send-message", sendMessage)
 
+	// This CA-pool specifies which client certificates can log in to our site.
 	pool := readCert("datingLocalCA.cert.pem")
 	
 	log.Printf("About to listen on 10443. Go to https://dating.wtmnd.nl:10443/")
@@ -273,7 +264,6 @@ func saveAlien(alien Alien) {
 	check(err)
 	log.Printf("Inserted %d rows", count)
 }
-
 
 func getAliens() (aliens []Alien) {
 	rows, err := db.Query("SELECT cn, race, occupation FROM aliens")
