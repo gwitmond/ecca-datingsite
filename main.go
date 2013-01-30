@@ -166,7 +166,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 var needToRegisterTemplate = template.Must(template.ParseFiles("needToRegister.template", "menu.template"))
 
 func sendToLogin (w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("WWW-Authenticate", "Ecca realm=\"dating.wtmnd.nl\" type=\"public-key\" register=\"https://register-dating.wtmnd.nl:10444/register-pubkey\"")
 	w.WriteHeader(401)
 	err := needToRegisterTemplate.Execute(w, nil)
