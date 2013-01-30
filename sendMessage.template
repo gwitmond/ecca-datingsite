@@ -10,7 +10,7 @@
 <input type="hidden" name="encrypt" value="required">
 <input type="hidden" name="certificate_url" value="{{ .ToURL }}">
 <br>
-<textarea name="cleartext" rows="8" cols="80"></textarea><br>
+<textarea name="cleartext" rows="8" cols="80">I love the size of your ... ehm ... spaceship. Wanna dance?</textarea><br>
 <input type="submit" name="submit" value="Deliver">
 </form>
 </body></html>
