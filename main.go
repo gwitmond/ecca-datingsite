@@ -185,15 +185,24 @@ func main() {
 	// This CA-pool specifies which client certificates can log in to our site.
 	pool := readCert("datingLocalCA.cert.pem")
 	
-	log.Printf("About to listen on 10443. Go to https://dating.wtmnd.nl:10443/")
-	server := &http.Server{Addr: "[2001:980:71b2:1::443]:10443",
+	log.Printf("About to listen on ipv4:10443. Go to https://dating.wtmnd.nl:10443/")
+	server4 := &http.Server{Addr: "37.59.38.18:10443",
 		                       TLSConfig: &tls.Config{
 			            ClientCAs: pool,
 			ClientAuth: tls.VerifyClientCertIfGiven},
 	}
 	
-	err := server.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem")
-	check(err)
+	go server4.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem")
+	
+	log.Printf("About to listen on ipv6:10443. Go to https://dating.wtmnd.nl:10443/")
+	
+	server6 := &http.Server{Addr: "[2001:41d0:8:4d12::90]:10443",
+                                TLSConfig: &tls.Config{
+                                      ClientCAs: pool,
+			              ClientAuth: tls.VerifyClientCertIfGiven},
+	}
+	
+	check(server6.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem"))
 }
 
 
