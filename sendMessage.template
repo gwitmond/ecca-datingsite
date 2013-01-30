@@ -1,4 +1,8 @@
-<html><body>
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
 {{ template "menu" }}
 <h1>Send message to your favorite alien</h1>
 <p>Hello {{ .CN }}. Here you can compose a poem to you favorite alien {{ .ToCN }}</p>

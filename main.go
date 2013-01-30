@@ -17,15 +17,19 @@ import (
 	"html/template"
 	"database/sql"
 	_ "github.com/gwenn/gosqlite"
-	//"errors"
 )
 
 var homePageTemplate = template.Must(template.ParseFiles("homepage.template", "menu.template")) 
 
 func homePage(w http.ResponseWriter, req *http.Request) {
-	err := homePageTemplate.Execute(w, nil) 
-	check(err)
+	if req.URL.Path == "/" {
+		err := homePageTemplate.Execute(w, nil) 
+		check(err)
+		return
+	}
+	http.NotFound(w, req)
 }
+
 
 var editProfileTemplate = template.Must(template.ParseFiles("editProfile.template", "menu.template"))
 
@@ -39,8 +43,11 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
+		alien := getAlien(cn)  // alien or nil
+		log.Printf("Alien is %#v\n", alien)
 		err := editProfileTemplate.Execute(w, map[string]interface{}{
 			"CN": cn,
+			"alien": alien,
 			"races": races,
 			"occupations": occupations,
 		}) 
@@ -53,12 +60,24 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 			Race: req.Form.Get("race"),
 			Occupation: req.Form.Get("occupation"),
 		})
+		//TODO: make a nice page with a menu and a redirect-link.
 		w.Write([]byte(`<html><p>Thank you for your entry. <a href="/aliens">Show all aliens.</a></p></html>`))
 		return
+	// TODO: change panic to 400-error.
 	default: panic("Unexpected method")
 	}
 	return
 }
+
+
+// Checked sets the checked attribute.
+func (alien *Alien) Checked(data string) string {
+ 	if alien == nil { return "" } // no data, nothing selected
+ 	if alien.Race == data { return "checked"} // if the data is in the Alien.Race -> true
+ 	if alien.Occupation == data { return "checked" } // or if the data is in the Occup. -> true
+ 	return ""
+}
+
 
 
 var aliensTemplate = template.Must(template.ParseFiles("aliens.template", "menu.template"))
@@ -93,6 +112,9 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
+		// set this header to signal the user agent to perform data decryption.
+		w.Header().Set("Eccentric-Authentication", "decryption=\"required\"")
+		w.Header().Set("Content-Type", "text/html, charset=utf8")
 		messages := getMessages(cn)
 		err := readMessageTemplate.Execute(w, map[string]interface{}{
 			"CN": cn,
@@ -120,8 +142,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 	case "GET": 
 		req.ParseForm()
 		toCN := req.Form.Get("addressee")
- 		//w.Header().Set("Eccentric-Authentication", "encryption=\"required\"")
-		err := sendMessageTemplate.Execute(w, map[string]interface{}{
+ 		err := sendMessageTemplate.Execute(w, map[string]interface{}{
 			"CN": cn,
 			"ToCN": toCN,
 			"ToURL": "https://register-dating.wtmnd.nl:10444/get-certificate?nickname=" + toCN,
@@ -157,6 +178,7 @@ func main() {
 	http.HandleFunc("/aliens", showProfiles)
 	http.HandleFunc("/read-messages", readMessages)
 	http.HandleFunc("/send-message", sendMessage)
+	http.Handle("/static/", http.FileServer(http.Dir(".")))
 
 	// This CA-pool specifies which client certificates can log in to our site.
 	pool := readCert("datingLocalCA.cert.pem")
@@ -253,13 +275,26 @@ func init() {
 	// check(err) // ignore
 }
 
+// saveAlien inserts or updates an Alien record
 func saveAlien(alien Alien) {
-	insert, err := db.Prepare("INSERT INTO aliens (cn, race, occupation) values (?, ?, ?)")
-	check(err)
-	defer insert.Close()
+	existing := getAlien(alien.CN)
+	var result sql.Result
+	var err error
+	if existing == nil {
+		insert, err := db.Prepare("INSERT INTO aliens (cn, race, occupation) values (?, ?, ?)")
+		check(err)
+		defer insert.Close()
+		
+		result, err = insert.Exec(alien.CN, alien.Race, alien.Occupation)
+		check(err)
+	} else {
+		update, err := db.Prepare("UPDATE aliens SET race = ?, occupation = ? WHERE cn = ?")
+		check(err)
+		defer update.Close()
 
-	result, err := insert.Exec(alien.CN, alien.Race, alien.Occupation)
-	check(err)
+		result, err = update.Exec(alien.Race, alien.Occupation, alien.CN)
+		check(err)
+	}
 	count, err := result.RowsAffected()
 	check(err)
 	log.Printf("Inserted %d rows", count)
@@ -276,6 +311,20 @@ func getAliens() (aliens []Alien) {
 	}
 	return
 }
+
+// getAlien gets one alien
+func getAlien(cn string) (*Alien) {
+	rows, err := db.Query("SELECT cn, race, occupation FROM aliens WHERE cn = ?", cn)
+	check(err)
+	defer rows.Close()
+	if rows.Next() {
+		var alien Alien
+		rows.Scan(&alien.CN, &alien.Race, &alien.Occupation)
+		return &alien
+	}
+	return nil
+}
+
 
 
 func saveMessage(message Message) {

@@ -1,11 +1,28 @@
-<html><body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head> 
+<link type="text/css" rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
 {{ template "menu" }}
 <h1>Messages</h1>
 <p>These are the messages you have received</p>
-<table>
-<tr><th>Alien<th><th>Message</th></tr>
+
 {{ range $index, $message := .messages }} 
-<tr><td>{{ $message.FromCN }}<td><td>{{ $message.Ciphertext }}</td></tr>
+   
+  <div class="message">
+   <ecca_message>
+     Message from <from>{{ $message.FromCN }}</from><br />
+     <ciphertext>{{ $message.Ciphertext }}</ciphertext><br />
+     <cleartext>awaiting decoding ciphertext</cleartext><br /><br />
+     <form method="GET" action="/send-message">
+           <input type="hidden" name="addressee" value="{{ $message.FromCN }}" />
+     	   <input type="submit" name="reply" value="Reply" />
+     </form>
+   </ecca_message>
+  </div>
+  <br />
+
 {{ end }}
-</table>
 </body></html>

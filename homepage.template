@@ -1,7 +1,11 @@
-<html><body>
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
 {{ template "menu" }}
 
-<h1>The univere's most secure dating site</h1>
+<h1>The world's most secure dating site</h1>
 
 
 <p>This dating site shows what security and privacy benefits can be had 

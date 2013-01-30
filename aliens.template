@@ -1,4 +1,8 @@
-<html><body>
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
 {{ template "menu" }}
 <h1>These aliens are in stock</h1>
 <p>Please browse through the list of aliens and take your pick<p>

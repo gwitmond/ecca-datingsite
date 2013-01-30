@@ -1,20 +1,25 @@
-<html><body>
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
 {{ template "menu" }}
 <h1>Manage your alien profile</h1>
 <p>Hello {{ .CN }}. Here you can manage your profile. Please tick the appropriate boxes</p>
 <form method="POST">
 <h3>Race</h3>
 <p>Please describe your race</p>
+{{ $alien := .alien }}
 {{ range $race, $description := .races }}
-<input type="radio" name="race" value="{{ $race }}">{{ $description }}<br>
+<input type="radio" name="race" value="{{ $race }}" {{ $alien.Checked $race }} />{{ $description }}<br />
 {{ end }}
 
 <h3>Occupation</h3>
 Please describe your occupation</p>
 {{ range $occ, $description := .occupations }}
-<input type="radio" name="occupation" value="{{ $occ }}">{{ $description }}<br>
+<input type="radio" name="occupation" value="{{ $occ }}" {{ $alien.Checked $occ }} />{{ $description }}<br />
 {{ end }}
 <br>
-<input type="submit" name="submit" value="Engage">
+<input type="submit" name="submit" value="Engage" />
 </form>
 </body></html>
