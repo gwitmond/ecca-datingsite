@@ -10,3 +10,43 @@
 
 <p>This dating site shows what security and privacy benefits can be had 
 when you ditch passwords and use cryptography instead.</p>
+
+<h3>No passwords</h3>
+
+<p>With normal dating sites, you log in with a password. Not here. There are no 
+passwords. Not at all. Passwords are gone. We wield the power of cryptography.</p>
+
+<h3>Power of cryptography</h3>
+
+<p>We harness the power of certificates in three ways<br />
+
+<h3>1. Fully encrypted</h3>
+
+<p>We encrypt all data with https, just like every bank. 
+It protects your communication with us against Peeping Toms.</li>
+
+<h3>2. Easier and safer to log in</h3>
+
+<p>We ask you to log in with a client certificate. It may sound complicated but fear not.
+It's easier than signing up with a password. You choose your nickname, your computer does the 
+cryptographic hard work. It guarantees that no one but you can use that nickname.<p>
+
+<p>Notice, that we don't even ask for your password. You are truely anonymous</p>
+
+<h3>3. Completely confidential (and safe)</h3>
+
+<p>With the certificate comes a public and private key pair. It enables you to write messages to 
+other aliens on this site. But unlike other dating sites, you can encrypt the message so <ul>only</ul> 
+your recipient can read the message. Not even us, the operators of this site can read your message.<p>
+
+<p>You don't get off scott free. You still have to behave. You cannot be (too) naughty at first contact.
+If your recipient files a complaint about your behaviour, we blacklist your identity at the site. You will
+have to start over. When the other party leaves our site, there will be no way to contact him/her/it. 
+
+<p>The certificate is like a digital mask. On this site you only see the masks. Once you destroy the mask (you delete the private key), no one can match you and your mask, ever.
+
+<h1>The Magic Sauce</h3>
+
+<p>
+The magic of this site is in the way we use cryptography.
+</p>
