@@ -38,12 +38,15 @@ cryptographic hard work. It guarantees that no one but you can use that nickname
 <p>With the certificate comes a public and private key pair. It enables you to write messages to 
 other aliens on this site. But unlike other dating sites, you can encrypt the message 
 so <span style="text-decoration: underline;">only</span> 
-your recipient can read the message. Not even us, the operators of this site can read your message.<p>
+your recipient can read the message. Not even us, the operators of this site can read it. That's the power
+of cryptography.<p>
+
+<h3>Oh behave mr. Powers</h3>
 
 <p>Be warned. You don't get off scott free. You still have to behave. You cannot be (too) naughty 
 at first contact. If your recipient files a complaint about your behaviour to us, we blacklist your 
 certificate at the site and you will have to start all over. 
-When the other party leaves our site, there will be no way to contact him/her/it at all. 
+When the other party leaves our site, there will be no way to contact him/her/it at all.</p>
 
 <p>The certificate is like a digital mask. On this site you only see the masks. 
 Once you destroy the mask (you delete the private key), no one can match you and your mask, ever.</p>
@@ -58,7 +61,7 @@ does all that for you. We have that program. It's the
 Right now, it's only for the adventurers who love to tinker with software. 
 In the near future it will be in every operating system and browser.</p>
 
-<p>Please read: <a href="https://witmond.nl/blog/2012/10/22/announcing-eccentric-authentication.html">Introducing Eccentric Auhtentication</a>.</p>
+<p>Please read: <a href="https://witmond.nl/blog/2012/10/22/announcing-eccentric-authentication.html">Introducing Eccentric Authentication</a>.</p>
 
 <p>With regards, Guido Witmond.</p>
 <p>Feel free to mail: info @ witmond.nl.</p>

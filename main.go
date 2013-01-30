@@ -44,7 +44,7 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "GET": 
 		alien := getAlien(cn)  // alien or nil
-		log.Printf("Alien is %#v\n", alien)
+		//log.Printf("Alien is %#v\n", alien)
 		err := editProfileTemplate.Execute(w, map[string]interface{}{
 			"CN": cn,
 			"alien": alien,
@@ -84,7 +84,7 @@ var aliensTemplate = template.Must(template.ParseFiles("aliens.template", "menu.
 
 // Show profiles, no authentication required
 func showProfiles (w http.ResponseWriter, req *http.Request) {
-	log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
+	//log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
 	aliens := getAliens()
 	err := aliensTemplate.Execute(w, map[string]interface{}{
 		"aliens": aliens,
@@ -100,7 +100,7 @@ var readMessageTemplate = template.Must(template.ParseFiles("readMessage.templat
 
 // readMessages shows you the messages other aliens have sent.
 func readMessages (w http.ResponseWriter, req *http.Request) {
-	log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
+	//log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
 	// check to see if logged in
 	if len(req.TLS.PeerCertificates) == 0 {
 		// Not logged in. Send to register-site.
@@ -163,12 +163,14 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 	return
 }
 
+var needToRegisterTemplate = template.Must(template.ParseFiles("needToRegister.template", "menu.template"))
 
 func sendToLogin (w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("WWW-Authenticate", "Ecca realm=\"dating.wtmnd.nl\" type=\"public-key\" register=\"https://register-dating.wtmnd.nl:10444/register-pubkey\"")
 	w.WriteHeader(401)
-	w.Write([]byte("You need to register.\n"))
+	err := needToRegisterTemplate.Execute(w, nil)
+	//w.Write([]byte("You need to register.\n"))
 }	
 
 
@@ -185,7 +187,7 @@ func main() {
 	
 	log.Printf("About to listen on 10443. Go to https://dating.wtmnd.nl:10443/")
 	server := &http.Server{Addr: "[2001:980:71b2:1::443]:10443",
-	                       TLSConfig: &tls.Config{
+		                       TLSConfig: &tls.Config{
 			            ClientCAs: pool,
 			ClientAuth: tls.VerifyClientCertIfGiven},
 	}

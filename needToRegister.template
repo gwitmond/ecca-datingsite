@@ -1,0 +1,34 @@
+<html>
+<head>
+<link type="text/css" rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+{{ template "menu" }}
+
+<h1>You need to register</h1>
+
+<p>You need to register with our site before you can access this functionality.<p>
+
+<p>You need to sign up for a client certificate at our register-server before you can access 
+the real functionality of this site.</p>
+
+<p>Right now, it is quite difficult to do so. You need to be a Software Adventurer and install the 
+<a href="https://github.com/gwitmond/ecca-proxy">ecca-proxy</a> or you need to run some 
+commands on your computer and generate the private key and certificate yourself. The first option expects 
+you to be a programmer, the second option: It helps a lot if you are a programmer.</p>
+
+<p>In the near future we will write some instructions on how to install the ecca-proxy or how to create 
+the certificate and private key that enable you to use this site in the mean time</p>
+
+<h3>Apologies</h3>
+
+<p>For now, I apologise that you cannot enjoy the features as I intend you could. 
+Please bear with me. Future is Prgress.</p>
+
+<p>For more background reading: <a href="https://witmond.nl/blog/2012/10/22/announcing-eccentric-authentication.html">Introducing Eccentric Authentication</a> and the other articles.</p>
+
+<p>With regards, Guido Witmond.</p>
+<p>Feel free to mail: info @ witmond.nl.</p>
+<hr />
+</body>
+</html>
