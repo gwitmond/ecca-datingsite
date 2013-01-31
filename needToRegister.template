@@ -5,27 +5,43 @@
 <body>
 {{ template "menu" }}
 
-<h1>You need to register</h1>
+<h1>Don't panic :)</h1>
 
-<p>You need to register with our site before you can access this functionality.<p>
+<p>You need a client certificate to create a profile or read and write messages.<p>
 
-<p>You need to sign up for a client certificate at our register-server before you can access 
-the real functionality of this site.</p>
+<p>There are three ways to sign up:</p>
 
-<p>Right now, it is quite difficult to do so. You need to be a Software Adventurer and install the 
-<a href="https://github.com/gwitmond/ecca-proxy">ecca-proxy</a> or you need to run some 
-commands on your computer and generate the private key and certificate yourself. The first option expects 
-you to be a programmer, the second option: It helps a lot if you are a programmer.</p>
+<h3>With a User Agent<h/3>
 
-<p>In the near future we will write some instructions on how to install the ecca-proxy or how to create 
-the certificate and private key that enable you to use this site in the mean time</p>
+<p>For the best experience, please install the <a href="https://github.com/gwitmond/ecca-proxy">ecca-proxy</a>. 
+This proxy is designed to do all the hard work and makes using client certificates a breeze on any site that accepts Eccentric Authentication.</p>
 
-<h3>Apologies</h3>
+<p>Regrettably, you need to be a Software Adventurer to install and run it.</p>
 
-<p>For now, I apologise that you cannot enjoy the features as I intend you could. 
-Please bear with me. Future is Prgress.</p>
+<p>We envision that this user agent will be built into every computer and web browser soon.</p>
 
-<p>For more background reading: <a href="https://witmond.nl/blog/2012/10/22/announcing-eccentric-authentication.html">Introducing Eccentric Authentication</a> and the other articles.</p>
+<h3>Semi automatically</h3>
+
+<p>If you use the Firefox browser you can register at the <a href="https://register-dating.wtmnd.nl:10444/signup-genkey.html">Certificate Server</a>.</p>
+<p>With the certificate you can log in into the site but you won't be able to send encrypted messages. 
+To protect your privacy, we delete all messages you send that are not encrypted. 
+Although you can receive encrypted messages, you'll have a nice puzzle to decode it. 
+The User Agent above takes care of all that.
+
+<h3>Manually</h3>
+
+<p>Even with other browsers you can log in. But be warned, the process is not for the faint-of-hearts. 
+You'll need to run the </em>openssl</em> command with lots of arcane options. Twice.</p>
+
+<p>You can register at the <a href="https://register-dating.wtmnd.nl:10444/signup.html">Certificate Server</a>. It has the instructions on what to do and how to get that certificate into your browser</p>
+
+<p>It has the same drawbacks as the semi-automatic sign up procedure. You can only log in, no secure messaging for you.</p>
+
+
+<h3>Background</h3>
+
+
+<p>For more background reading: <a href="https://witmond.nl/blog/2012/10/22/announcing-eccentric-authentication.html">iAnnouncing Eccentric Authentication</a> and the other articles.</p>
 
 <p>With regards, Guido Witmond.</p>
 <p>Feel free to mail: info @ witmond.nl.</p>
