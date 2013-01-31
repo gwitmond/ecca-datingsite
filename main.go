@@ -64,7 +64,7 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte(`<html><p>Thank you for your entry. <a href="/aliens">Show all aliens.</a></p></html>`))
 		return
 	// TODO: change panic to 400-error.
-	default: panic("Unexpected method")
+	default: w.Write([]byte("Unexpected method"))
 	}
 	return
 }
@@ -151,14 +151,19 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 		return
 	case "POST":
 		req.ParseForm()
+		ciphertext := req.Form.Get("ciphertext")
+		if ciphertext == "" {
+			w.write([]byte(`<html><p>You message was not encrypted. We won't accept it. Please use the ecca-proxy.</p></html>`))
+			return
+		}
 		saveMessage(Message{
 			FromCN: cn,
 			ToCN: req.Form.Get("addressee"),
-			Ciphertext: req.Form.Get("ciphertext"),
+			Ciphertext: ciphertext,
 		})
 		w.Write([]byte(`<html><p>Thank you, your message will be delivered at galactic speed.</p></html>`))
 		return
-	default: panic("Unexpected method")
+	default: ("Unexpected method")
 	}
 	return
 }
