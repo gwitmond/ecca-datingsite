@@ -153,7 +153,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 		req.ParseForm()
 		ciphertext := req.Form.Get("ciphertext")
 		if ciphertext == "" {
-			w.write([]byte(`<html><p>You message was not encrypted. We won't accept it. Please use the ecca-proxy.</p></html>`))
+			w.Write([]byte(`<html><p>You message was not encrypted. We won't accept it. Please use the ecca-proxy.</p></html>`))
 			return
 		}
 		saveMessage(Message{
@@ -163,7 +163,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 		})
 		w.Write([]byte(`<html><p>Thank you, your message will be delivered at galactic speed.</p></html>`))
 		return
-	default: ("Unexpected method")
+	default: w.Write([]byte("Unexpected method"))
 	}
 	return
 }
@@ -192,7 +192,7 @@ func main() {
 	pool := readCert("datingLocalCA.cert.pem")
 	
 	log.Printf("About to listen on ipv4:10443. Go to https://dating.wtmnd.nl:10443/")
-	server4 := &http.Server{Addr: "37.59.38.18:10443",
+	server4 := &http.Server{Addr: "0.0.0.0:10443",
 		                       TLSConfig: &tls.Config{
 			            ClientCAs: pool,
 			ClientAuth: tls.VerifyClientCertIfGiven},
@@ -202,7 +202,7 @@ func main() {
 	
 	log.Printf("About to listen on ipv6:10443. Go to https://dating.wtmnd.nl:10443/")
 	
-	server6 := &http.Server{Addr: "[2001:41d0:8:4d12::90]:10443",
+		server6 := &http.Server{Addr: "[::]:10443",
                                 TLSConfig: &tls.Config{
                                       ClientCAs: pool,
 			              ClientAuth: tls.VerifyClientCertIfGiven},
