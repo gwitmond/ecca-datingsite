@@ -22,4 +22,5 @@ Please describe your occupation</p>
 <br>
 <input type="submit" name="submit" value="Engage" />
 </form>
+{{ template "tracking" }}
 </body></html>

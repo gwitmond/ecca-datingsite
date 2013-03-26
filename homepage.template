@@ -66,3 +66,5 @@ In the near future it will be in every operating system and browser.</p>
 <p>With regards, Guido Witmond.</p>
 <p>Feel free to mail: info @ witmond.nl.</p>
 <hr />
+{{ template "tracking" }}
+</body></html>

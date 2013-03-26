@@ -19,7 +19,7 @@ import (
 	_ "github.com/gwenn/gosqlite"
 )
 
-var homePageTemplate = template.Must(template.ParseFiles("homepage.template", "menu.template")) 
+var homePageTemplate = template.Must(template.ParseFiles("homepage.template", "menu.template", "tracking.template")) 
 
 func homePage(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path == "/" {
@@ -31,7 +31,7 @@ func homePage(w http.ResponseWriter, req *http.Request) {
 }
 
 
-var editProfileTemplate = template.Must(template.ParseFiles("editProfile.template", "menu.template"))
+var editProfileTemplate = template.Must(template.ParseFiles("editProfile.template", "menu.template", "tracking.template"))
 
 func editProfile(w http.ResponseWriter, req *http.Request) {
 	if len(req.TLS.PeerCertificates) == 0 {
@@ -80,7 +80,7 @@ func (alien *Alien) Checked(data string) string {
 
 
 
-var aliensTemplate = template.Must(template.ParseFiles("aliens.template", "menu.template"))
+var aliensTemplate = template.Must(template.ParseFiles("aliens.template", "menu.template", "tracking.template"))
 
 // Show profiles, no authentication required
 func showProfiles (w http.ResponseWriter, req *http.Request) {
@@ -96,7 +96,7 @@ func showProfiles (w http.ResponseWriter, req *http.Request) {
 }
 
 
-var readMessageTemplate = template.Must(template.ParseFiles("readMessage.template", "menu.template"))
+var readMessageTemplate = template.Must(template.ParseFiles("readMessage.template", "menu.template", "tracking.template"))
 
 // readMessages shows you the messages other aliens have sent.
 func readMessages (w http.ResponseWriter, req *http.Request) {
@@ -128,7 +128,7 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 }
 
 
-var sendMessageTemplate = template.Must(template.ParseFiles("sendMessage.template", "menu.template"))
+var sendMessageTemplate = template.Must(template.ParseFiles("sendMessage.template", "menu.template", "tracking.template"))
 
 func sendMessage(w http.ResponseWriter, req *http.Request) {
 	if len(req.TLS.PeerCertificates) == 0 {
@@ -168,7 +168,7 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 	return
 }
 
-var needToRegisterTemplate = template.Must(template.ParseFiles("needToRegister.template", "menu.template"))
+var needToRegisterTemplate = template.Must(template.ParseFiles("needToRegister.template", "menu.template", "tracking.template"))
 
 func sendToLogin (w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
@@ -191,14 +191,14 @@ func main() {
 	// This CA-pool specifies which client certificates can log in to our site.
 	pool := readCert("datingLocalCA.cert.pem")
 	
-	log.Printf("About to listen on ipv4:10443. Go to https://dating.wtmnd.nl:10443/")
-		server4 := &http.Server{Addr: "0.0.0.0:10443",
-		                       TLSConfig: &tls.Config{
-			            ClientCAs: pool,
-			ClientAuth: tls.VerifyClientCertIfGiven},
-	}
+	//log.Printf("About to listen on ipv4:10443. Go to https://dating.wtmnd.nl:10443/")
+	//	server4 := &http.Server{Addr: "0.0.0.0:10443",
+	//	                       TLSConfig: &tls.Config{
+	//		            ClientCAs: pool,
+	//		ClientAuth: tls.VerifyClientCertIfGiven},
+	//}
 	
-	go server4.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem")
+	//go server4.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem")
 	
 	log.Printf("About to listen on ipv4 and 6:10443. Go to https://dating.wtmnd.nl:10443/")
 	

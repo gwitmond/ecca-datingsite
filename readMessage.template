@@ -25,4 +25,7 @@
   <br />
 
 {{ end }}
-</body></html>
+
+{{ template "tracking" }}
+</body>
+</html>
