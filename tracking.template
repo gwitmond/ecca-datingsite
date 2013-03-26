@@ -15,7 +15,7 @@
 </script>
 
 <noscript>
-  <img src="http://piwik.wtmnd.nl/piwik.php?idsite=3&amp;rec=1" style="border:0" alt="" />
+  <img src="http://piwik.wtmnd.nl/piwik.php?idsite=3&rec=1" style="border:0" alt="" />
 </noscript>
 <!-- End Piwik -->
 {{ end }}
