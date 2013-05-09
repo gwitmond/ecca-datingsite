@@ -26,6 +26,5 @@
 
 {{ end }}
 
-{{ template "tracking" }}
 </body>
 </html>

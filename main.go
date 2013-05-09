@@ -1,58 +1,108 @@
-// Ecca Authentication Dating Site Example
+// Eccentric Authentication Dating Site Example
 //
 // Show the cryptographic message signing and encryption to provide anonymous
 // but secure and private communication.
 //
 // Copyright 2013, Guido Witmond <guido@witmond.nl>
-// Licensed under GPL v3 or later.
+// Licensed under AGPL v3 or later. See LICENSE.
 
 package main
 
 import (
 	"log"
 	"net/http"
-	"crypto/x509"
+	"net/url"
 	"crypto/tls"
-	"io/ioutil"
 	"html/template"
+	"flag"
+
+	"github.com/gwitmond/eccentric-authentication" // package eccentric
+
 	"database/sql"
 	_ "github.com/gwenn/gosqlite"
 )
 
-var homePageTemplate = template.Must(template.ParseFiles("homepage.template", "menu.template", "tracking.template")) 
+
+// The things to set before running.
+var certDir = flag.String("cert", "cert", "Directory where the certificates and keys are found.") 
+var fpcaCert = flag.String("fpcaCert", "applicationFPCA.cert.pem", "File with the Certificate of the First Party Certificate Authority that we accept for our clients.")
+var fpcaURL = flag.String("fpcaUrl", "https://register-application.example.nl", "URL of the First Party Certificate Authority where clients can get their certificate.")
+var hostname = flag.String("hostname", "application.example.nl", "Hostname of the application. Determines which cert.pem and key.pem are used for the TLS-connection.")
+var bindAddress = flag.String("bind", "[::]:443", "Address and port number where to bind the listening socket.") 
+//var namespace = flag.String("namespace", "", "Name space that we are signing. I.E. <cn>@@example.com. Specifiy the part after the @@.")
+
+var ecca= eccentric.Authentication{
+	RegisterURL:  *fpcaURL, // "https://register-dating.wtmnd.nl:10444/register-pubkey",
+	Templates: templates,   //Just copy the templates variable
+}
+
+var templates = template.Must(template.ParseFiles(
+	"templates/homepage.template",
+	"templates/editProfile.template",
+	"templates/aliens.template",
+	"templates/readMessage.template",
+	"templates/sendMessage.template",
+	"templates/needToRegister.template",
+	"templates/menu.template",
+	"templates/tracking.template")) 
+
+
+func init() {
+	http.HandleFunc("/", homePage)
+	http.HandleFunc("/aliens", showProfiles)
+
+	http.Handle("/profile", ecca.LoggedInHandler(editProfile, "needToRegister.template"))
+
+	http.Handle("/read-messages", ecca.LoggedInHandler(readMessages, "needToRegister.template"))
+	http.Handle("/send-message", ecca.LoggedInHandler(sendMessage, "needToRegister.template"))
+
+	http.Handle("/static/", http.FileServer(http.Dir(".")))
+}
+
+
+func main() {
+	flag.Parse()
+	// This CA-pool specifies which client certificates can log in to our site.
+	pool := eccentric.ReadCert( *certDir + "/" + *fpcaCert) // "datingLocalCA.cert.pem"
+	
+	log.Printf("Started at %s. Go to https://%s/ + port", *bindAddress, *hostname)
+	
+	server := &http.Server{Addr: *bindAddress,
+		TLSConfig: &tls.Config{
+			ClientCAs: pool,
+			ClientAuth: tls.VerifyClientCertIfGiven},
+	}
+	// Set  the server certificate to encrypt the connection with TLS
+	ssl_certificate := *certDir + "/" + *hostname + ".cert.pem"
+	ssl_cert_key   := *certDir + "/" + *hostname + ".key.pem"
+	
+	check(server.ListenAndServeTLS(ssl_certificate, ssl_cert_key))
+}
+
 
 func homePage(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path == "/" {
-		err := homePageTemplate.Execute(w, nil) 
-		check(err)
-		return
+		check(templates.ExecuteTemplate(w, "homepage.template",  nil))
 	}
 	http.NotFound(w, req)
 }
 
 
-var editProfileTemplate = template.Must(template.ParseFiles("editProfile.template", "menu.template", "tracking.template"))
-
+// editProfile lets the user fill in his/her profile data to lure the aliens into the hive.
 func editProfile(w http.ResponseWriter, req *http.Request) {
-	if len(req.TLS.PeerCertificates) == 0 {
-		sendToLogin(w, req)
-		return
-	}
-
-	// User is logged in
+	// LoggedInHander made sure our user is logged in.
+	// If not, this will give a nice 500 Internal Server Error.
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
 		alien := getAlien(cn)  // alien or nil
-		//log.Printf("Alien is %#v\n", alien)
-		err := editProfileTemplate.Execute(w, map[string]interface{}{
+		check(templates.ExecuteTemplate(w, "editProfile.template", map[string]interface{}{
 			"CN": cn,
 			"alien": alien,
 			"races": races,
 			"occupations": occupations,
-		}) 
-		check(err)
-		return
+		}))
+
 	case "POST":
 		req.ParseForm()
 		saveAlien(Alien{
@@ -60,17 +110,17 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 			Race: req.Form.Get("race"),
 			Occupation: req.Form.Get("occupation"),
 		})
-		//TODO: make a nice page with a menu and a redirect-link.
+		//TODO: make a nice template with a menu and a redirect-link.
 		w.Write([]byte(`<html><p>Thank you for your entry. <a href="/aliens">Show all aliens.</a></p></html>`))
-		return
-	// TODO: change panic to 400-error.
-	default: w.Write([]byte("Unexpected method"))
+
+	default: 
+		http.Error(w, "Unexpected method", http.StatusMethodNotAllowed )
 	}
-	return
 }
 
 
 // Checked sets the checked attribute.
+// To be called from within templates.
 func (alien *Alien) Checked(data string) string {
  	if alien == nil { return "" } // no data, nothing selected
  	if alien.Race == data { return "checked"} // if the data is in the Alien.Race -> true
@@ -79,81 +129,65 @@ func (alien *Alien) Checked(data string) string {
 }
 
 
-
-var aliensTemplate = template.Must(template.ParseFiles("aliens.template", "menu.template", "tracking.template"))
-
 // Show profiles, no authentication required
 func showProfiles (w http.ResponseWriter, req *http.Request) {
-	//log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
 	aliens := getAliens()
-	err := aliensTemplate.Execute(w, map[string]interface{}{
+	check(templates.ExecuteTemplate(w, "aliens.template", map[string]interface{}{
 		"aliens": aliens,
 		"races": races,
 		"occupations": occupations,
-	}) 
-	check(err)
-	return
+	}))
 }
 
 
-var readMessageTemplate = template.Must(template.ParseFiles("readMessage.template", "menu.template", "tracking.template"))
-
-// readMessages shows you the messages other aliens have sent.
+// readMessages shows you the messages other aliens have sent you.
 func readMessages (w http.ResponseWriter, req *http.Request) {
-	//log.Printf("TLS connection %s, state: %#v\n", req.URL.Host, req.TLS)
-	// check to see if logged in
-	if len(req.TLS.PeerCertificates) == 0 {
-		// Not logged in. Send to register-site.
-		sendToLogin(w, req)
-		return
-	}
-
 	// User is logged in
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
-		// set this header to signal the user agent to perform data decryption.
+		// set this header to signal the user's Agent to perform data decryption.
 		w.Header().Set("Eccentric-Authentication", "decryption=\"required\"")
 		w.Header().Set("Content-Type", "text/html, charset=utf8")
 		messages := getMessages(cn)
-		err := readMessageTemplate.Execute(w, map[string]interface{}{
+		check(templates.ExecuteTemplate(w, "readMessage.template", map[string]interface{}{
 			"CN": cn,
 			"messages": messages,
-		}) 
-		check(err)
-		return
-	default: panic("Unexpected method")
+		}))
+		
+	default:
+ 		http.Error(w, "Unexpected method", http.StatusMethodNotAllowed )
+
 	}
-	return
 }
 
 
-var sendMessageTemplate = template.Must(template.ParseFiles("sendMessage.template", "menu.template", "tracking.template"))
-
+// sendMessage takes an encrypted message and delivers it at the message box of the recipient
+// Right now, that's our own dating site. It could perform a MitM.
+// See: http://eccentric-authentication.org/eccentric-authentication/private_messaging.html
 func sendMessage(w http.ResponseWriter, req *http.Request) {
-	if len(req.TLS.PeerCertificates) == 0 {
-		sendToLogin(w, req)
-		return
-	}
-
-	// User is logged in
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
 		req.ParseForm()
 		toCN := req.Form.Get("addressee")
- 		err := sendMessageTemplate.Execute(w, map[string]interface{}{
+		toURL, err := url.Parse("https://register-dating.wtmnd.nl:10444/get-certificate")
+		check(err)
+		q := toURL.Query()
+		q.Set("nickname", toCN)
+		toURL.RawQuery = q.Encode()
+ 		check(templates.ExecuteTemplate(w, "sendMessage.template", map[string]interface{}{
 			"CN": cn,
 			"ToCN": toCN,
-			"ToURL": "https://register-dating.wtmnd.nl:10444/get-certificate?nickname=" + toCN,
-		})
-		check(err)
-		return
+			"ToURL": toURL,
+		}))
+
+
 	case "POST":
 		req.ParseForm()
 		ciphertext := req.Form.Get("ciphertext")
 		if ciphertext == "" {
-			w.Write([]byte(`<html><p>You message was not encrypted. We won't accept it. Please use the ecca-proxy.</p></html>`))
+			w.Write([]byte(`<html><p>Your message was not encrypted. We won't accept it. Please use the ecca-proxy.</p></html>`))
 			return
 		}
 		saveMessage(Message{
@@ -162,70 +196,14 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 			Ciphertext: ciphertext,
 		})
 		w.Write([]byte(`<html><p>Thank you, your message will be delivered at galactic speed.</p></html>`))
-		return
-	default: w.Write([]byte("Unexpected method"))
+
+	default:
+ 		http.Error(w, "Unexpected method", http.StatusMethodNotAllowed )
 	}
-	return
-}
 
-var needToRegisterTemplate = template.Must(template.ParseFiles("needToRegister.template", "menu.template", "tracking.template"))
-
-func sendToLogin (w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("WWW-Authenticate", "Ecca realm=\"dating.wtmnd.nl\" type=\"public-key\" register=\"https://register-dating.wtmnd.nl:10444/register-pubkey\"")
-	w.WriteHeader(401)
-	err := needToRegisterTemplate.Execute(w, nil)
-	check(err)
-	//w.Write([]byte("You need to register.\n"))
-}	
-
-
-func main() {
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/profile", editProfile)
-	http.HandleFunc("/aliens", showProfiles)
-	http.HandleFunc("/read-messages", readMessages)
-	http.HandleFunc("/send-message", sendMessage)
-	http.Handle("/static/", http.FileServer(http.Dir(".")))
-
-	// This CA-pool specifies which client certificates can log in to our site.
-	pool := readCert("datingLocalCA.cert.pem")
-	
-	//log.Printf("About to listen on ipv4:10443. Go to https://dating.wtmnd.nl:10443/")
-	//	server4 := &http.Server{Addr: "0.0.0.0:10443",
-	//	                       TLSConfig: &tls.Config{
-	//		            ClientCAs: pool,
-	//		ClientAuth: tls.VerifyClientCertIfGiven},
-	//}
-	
-	//go server4.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem")
-	
-	log.Printf("About to listen on ipv4 and 6:10443. Go to https://dating.wtmnd.nl:10443/")
-	
-		server6 := &http.Server{Addr: "[::]:10443",
-                                TLSConfig: &tls.Config{
-                                      ClientCAs: pool,
-			              ClientAuth: tls.VerifyClientCertIfGiven},
-	}
-	
-	check(server6.ListenAndServeTLS("dating.wtmnd.nl.cert.pem", "dating.wtmnd.nl.key.pem"))
 }
 
 
-// read certificate file or panic
-func readCert(certFile string) (*x509.CertPool) {
-	pool := x509.NewCertPool()
-
-	certPEMBlock, err := ioutil.ReadFile(certFile)
-	if err != nil {
-		panic("Cannot read certificate file " + certFile)
-	}
-	ok := pool.AppendCertsFromPEM(certPEMBlock)
-	if !ok  {
-		panic("Cannot parse certificate file " + certFile)
-	}
-	return pool
-}
 
 	
 func check(err error) {

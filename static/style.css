@@ -45,7 +45,9 @@ h1,h2,h3 { font-family: Garamond, "Times New Roman", serif; }
                  border: solid; border-width: thin; width: 100%;
 		 padding: 0.5em;
    }
-   from        { background-color: #33FF33; }
+   from        { background-color: #33FF33;
+	         margin-bottom: 0.5em;
+   }
    ciphertext { background-color: #CCCC99;
    	        margin-left: 2em; 
 		display: block;
