@@ -8,7 +8,7 @@
 <p>Hello {{ .CN }}. Here you can compose a poem to you favorite alien {{ .ToCN }}</p>
 <form method="POST">
 <input type="hidden" name="encrypt" value="required">
-<input type="hidden" name="certificate_url" value="{{ .ToURL }}">
+<input type="hidden" name="certificate_url" value="{{ .IdURL }}">
 <br>
 <textarea name="cleartext" rows="8" cols="80">I love the size of your ... ehm ... spaceship. Wanna dance?</textarea><br>
 <input type="submit" name="submit" value="Deliver">

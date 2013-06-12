@@ -18,28 +18,27 @@ import (
 
 	"github.com/gwitmond/eccentric-authentication" // package eccentric
 
-	"database/sql"
-	_ "github.com/gwenn/gosqlite"
+	// These are for the data storage
+	//"github.com/coopernurse/gorp"
+	//"database/sql"
+	//_ "github.com/mattn/go-sqlite3"
 )
 
-
 // The things to set before running.
-var certDir = flag.String("cert", "cert", "Directory where the certificates and keys are found.") 
+var certDir = flag.String("config", "cert", "Directory where the certificates and keys are found.") 
 var fpcaCert = flag.String("fpcaCert", "applicationFPCA.cert.pem", "File with the Certificate of the First Party Certificate Authority that we accept for our clients.")
-var fpcaURL = flag.String("fpcaUrl", "https://register-application.example.nl", "URL of the First Party Certificate Authority where clients can get their certificate.")
+var fpcaURL = flag.String("fpcaURL", "https://register-application.example.nl", "URL of the First Party Certificate Authority where clients can get their certificate.")
 var hostname = flag.String("hostname", "application.example.nl", "Hostname of the application. Determines which cert.pem and key.pem are used for the TLS-connection.")
 var bindAddress = flag.String("bind", "[::]:443", "Address and port number where to bind the listening socket.") 
-//var namespace = flag.String("namespace", "", "Name space that we are signing. I.E. <cn>@@example.com. Specifiy the part after the @@.")
 
-var ecca= eccentric.Authentication{
-	RegisterURL:  *fpcaURL, // "https://register-dating.wtmnd.nl:10444/register-pubkey",
-	Templates: templates,   //Just copy the templates variable
-}
-
+// global state
+var ecca = eccentric.Authentication{}
+ 
 var templates = template.Must(template.ParseFiles(
 	"templates/homepage.template",
 	"templates/editProfile.template",
 	"templates/aliens.template",
+	"templates/showAlien.template",	
 	"templates/readMessage.template",
 	"templates/sendMessage.template",
 	"templates/needToRegister.template",
@@ -49,8 +48,9 @@ var templates = template.Must(template.ParseFiles(
 
 func init() {
 	http.HandleFunc("/", homePage)
-	http.HandleFunc("/aliens", showProfiles)
-
+	http.HandleFunc("/aliens", showAliens)
+	http.HandleFunc("/show", showProfile)
+	
 	http.Handle("/profile", ecca.LoggedInHandler(editProfile, "needToRegister.template"))
 
 	http.Handle("/read-messages", ecca.LoggedInHandler(readMessages, "needToRegister.template"))
@@ -62,6 +62,11 @@ func init() {
 
 func main() {
 	flag.Parse()
+	ecca = eccentric.Authentication{
+		RegisterURL:  *fpcaURL, // "https://register-dating.wtmnd.nl:10444/register-pubkey",
+		Templates: templates,   //Just copy the templates variable
+	}
+
 	// This CA-pool specifies which client certificates can log in to our site.
 	pool := eccentric.ReadCert( *certDir + "/" + *fpcaCert) // "datingLocalCA.cert.pem"
 	
@@ -83,6 +88,7 @@ func main() {
 func homePage(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path == "/" {
 		check(templates.ExecuteTemplate(w, "homepage.template",  nil))
+		return;
 	}
 	http.NotFound(w, req)
 }
@@ -90,8 +96,7 @@ func homePage(w http.ResponseWriter, req *http.Request) {
 
 // editProfile lets the user fill in his/her profile data to lure the aliens into the hive.
 func editProfile(w http.ResponseWriter, req *http.Request) {
-	// LoggedInHander made sure our user is logged in.
-	// If not, this will give a nice 500 Internal Server Error.
+	// LoggedInHander made sure our user is logged in with a correct certificate
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
 	case "GET": 
@@ -129,8 +134,8 @@ func (alien *Alien) Checked(data string) string {
 }
 
 
-// Show profiles, no authentication required
-func showProfiles (w http.ResponseWriter, req *http.Request) {
+// Show all aliens, no authentication required
+func showAliens (w http.ResponseWriter, req *http.Request) {
 	aliens := getAliens()
 	check(templates.ExecuteTemplate(w, "aliens.template", map[string]interface{}{
 		"aliens": aliens,
@@ -139,6 +144,18 @@ func showProfiles (w http.ResponseWriter, req *http.Request) {
 	}))
 }
 
+// Show all aliens, no authentication required
+func showProfile (w http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	cn := req.Form.Get("alien")
+	alien := getAlien(cn)
+	if alien == nil {
+		http.NotFound(w, req)
+		return
+	}
+	check(templates.ExecuteTemplate(w, "showAlien.template", map[string]interface{}{
+		"alien": alien	}))
+}
 
 // readMessages shows you the messages other aliens have sent you.
 func readMessages (w http.ResponseWriter, req *http.Request) {
@@ -171,17 +188,22 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 	case "GET": 
 		req.ParseForm()
 		toCN := req.Form.Get("addressee")
-		toURL, err := url.Parse("https://register-dating.wtmnd.nl:10444/get-certificate")
-		check(err)
-		q := toURL.Query()
-		q.Set("nickname", toCN)
-		toURL.RawQuery = q.Encode()
- 		check(templates.ExecuteTemplate(w, "sendMessage.template", map[string]interface{}{
-			"CN": cn,
-			"ToCN": toCN,
-			"ToURL": toURL,
-		}))
 
+		// idURL 
+		// We do provide a path to the CA to let the user retrieve the public key of the recipient.
+		// User is free to obtain in other ways... :-)
+		idURL, err := url.Parse(*fpcaURL)
+		idURL.Path = "/get-certificate"
+		check(err)
+		q := idURL.Query()
+		q.Set("nickname", toCN)
+		idURL.RawQuery = q.Encode()
+
+ 		check(templates.ExecuteTemplate(w, "sendMessage.template", map[string]interface{}{
+			"CN": cn,            // from us
+			"ToCN": toCN,   // to recipient
+			"IdURL": idURL, // where to find the certificate with public key
+		}))
 
 	case "POST":
 		req.ParseForm()
@@ -253,95 +275,4 @@ type Message struct {
 	Ciphertext string // []byte  // don't convert to utf-8 string and back
 }
 
-// Database connection
 
-var dbFile = "datingdb.db"
-var db *sql.DB
-	
-func init() {
-	var err error
-	db, err = sql.Open("sqlite3", dbFile)
-	check(err)	
-	
-	_, err = db.Exec("CREATE TABLE aliens (cn TEXT, race TEXT, occupation TEXT)")
-	// check(err) // ignore
-
-	_, err = db.Exec("CREATE TABLE messages (toCN TEXT, fromCN, ciphertext BLOB)")
-	// check(err) // ignore
-}
-
-// saveAlien inserts or updates an Alien record
-func saveAlien(alien Alien) {
-	existing := getAlien(alien.CN)
-	var result sql.Result
-	var err error
-	if existing == nil {
-		insert, err := db.Prepare("INSERT INTO aliens (cn, race, occupation) values (?, ?, ?)")
-		check(err)
-		defer insert.Close()
-		
-		result, err = insert.Exec(alien.CN, alien.Race, alien.Occupation)
-		check(err)
-	} else {
-		update, err := db.Prepare("UPDATE aliens SET race = ?, occupation = ? WHERE cn = ?")
-		check(err)
-		defer update.Close()
-
-		result, err = update.Exec(alien.Race, alien.Occupation, alien.CN)
-		check(err)
-	}
-	count, err := result.RowsAffected()
-	check(err)
-	log.Printf("Inserted %d rows", count)
-}
-
-func getAliens() (aliens []Alien) {
-	rows, err := db.Query("SELECT cn, race, occupation FROM aliens")
-	check(err)
-	defer rows.Close()
-	for rows.Next() {
-		var alien Alien
-		rows.Scan(&alien.CN, &alien.Race, &alien.Occupation)
-		aliens = append(aliens, alien)
-	}
-	return
-}
-
-// getAlien gets one alien
-func getAlien(cn string) (*Alien) {
-	rows, err := db.Query("SELECT cn, race, occupation FROM aliens WHERE cn = ?", cn)
-	check(err)
-	defer rows.Close()
-	if rows.Next() {
-		var alien Alien
-		rows.Scan(&alien.CN, &alien.Race, &alien.Occupation)
-		return &alien
-	}
-	return nil
-}
-
-
-
-func saveMessage(message Message) {
-	insert, err := db.Prepare("INSERT INTO messages (toCN, fromCN, ciphertext) values (?, ?, ?)")
-	check(err)
-	defer insert.Close()
-
-	result, err := insert.Exec(message.ToCN, message.FromCN, message.Ciphertext)
-	check(err)
-	count, err := result.RowsAffected()
-	check(err)
-	log.Printf("Inserted %d rows", count)
-}
-
-func getMessages(toCN string) (messages []Message) {
-	rows, err := db.Query("SELECT toCN, fromCN, ciphertext FROM messages WHERE toCN = ?", toCN)
-	check(err)
-	defer rows.Close()
-	for rows.Next() {
-		var message Message
-		rows.Scan(&message.ToCN, &message.FromCN, &message.Ciphertext)
-		messages = append(messages, message)
-	}
-	return
-}
