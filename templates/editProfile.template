@@ -20,6 +20,7 @@ Please describe your occupation</p>
 <input type="radio" name="occupation" value="{{ $occ }}" {{ $alien.Checked $occ }} />{{ $description }}<br />
 {{ end }}
 <br>
+<p>(If this was a real dating site you could add an autopsy report on your species for better matching of compatible races.)</p>
 <input type="submit" name="submit" value="Engage" />
 </form>
 {{ template "tracking" }}

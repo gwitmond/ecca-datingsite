@@ -7,12 +7,13 @@
 <h1>The gory details</h1>
 <p>Here are the gory details of your chosen alien.<p>
 <table>
-<tr><th>Alien<th><td>{{ .alien.CN }}<td></tr>
+<tr><th>Alien</th><td>{{ .alien.CN }}</td></tr>
 <tr><th>Race</th><td>{{ .alien.GetRace }}</td></tr>
 <tr><th>Occupation</th><td>{{ .alien.GetOccupation }}</td></tr>
 </table>
-<p>If this was a real dating site, we would have more gory details. For now, if you have an account, you can write a message. If you don't have a profile, you are requested to create one first.</p>
-<p>Write a message to <a href="/send-message?addressee={{ .alien.CN }}">{{ .alien.CN }}</a>. Or <a href="/profile">create</a> a profile first.
+<p>If this was a real dating site, we would have more gory details. For now, if you have an account, you can compose a poem. If you don't have a profile, you are requested to create one first.</p>
+<p><form method="GET" action="/send-message?addressee={{ .alien.CN }}"><input type="submit" value="Compose a Poem"></form></p>
+<p>Or <a href="/profile">create</a> a profile first.</p>
 
 
 {{ template "tracking" }}
