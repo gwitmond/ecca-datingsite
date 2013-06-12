@@ -12,7 +12,9 @@
 <tr><th>Occupation</th><td>{{ .alien.GetOccupation }}</td></tr>
 </table>
 <p>If this was a real dating site, we would have more gory details. For now, if you have an account, you can compose a poem. If you don't have a profile, you are requested to create one first.</p>
-<p><form method="GET" action="/send-message?addressee={{ .alien.CN }}"><input type="submit" value="Compose a Poem"></form></p>
+<p><form method="GET" action="/send-message">
+<input type="hidden" name="addressee" value="{{ .alien.CN }}">
+<input type="submit" value="Compose a Poem"></form></p>
 <p>Or <a href="/profile">create</a> a profile first.</p>
 
 
