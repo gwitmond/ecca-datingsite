@@ -24,22 +24,22 @@ func main() {
 	// Generate a self signed CA cert & key.
 	caCert, caKey, err := generateCA("The World's most secure dating site")
 	handle(err)
-	writePair("datingCA", caCert, caKey)
+	writePair("datingTestRootCA", caCert, caKey)
 
 	// Generate the Key and certificate that sign the client certificates
 	localCaCert, localCaKey, err := generateLocalCA("Register at the World's most secure dating site", caCert, caKey)
 	handle(err)
-	writePair("datingLocalCA", localCaCert, localCaKey)
+	writePair("datingTestLocalCA", localCaCert, localCaKey)
 	
         // Generate an alpha cert signed by our CA cert
-        alphaCert, alphaKey, err := generateCert("dating.wtmnd.nl", caCert, caKey)
+        alphaCert, alphaKey, err := generateCert("datingtest.wtmnd.nl", caCert, caKey)
         handle(err)
-	writePair("dating.wtmnd.nl", alphaCert, alphaKey)
+	writePair("datingtest.wtmnd.nl", alphaCert, alphaKey)
 
         // Generate an beta cert signed by our CA cert
-        betaCert, betaKey, err := generateCert("register-dating.wtmnd.nl", caCert, caKey)
+        betaCert, betaKey, err := generateCert("register-datingtest.wtmnd.nl", caCert, caKey)
         handle(err)
-	writePair("register-dating.wtmnd.nl", betaCert, betaKey)
+	writePair("register-datingtest.wtmnd.nl", betaCert, betaKey)
 }
 
 func writePair(serverName string, cert *x509.Certificate, key *rsa.PrivateKey) {

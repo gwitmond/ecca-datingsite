@@ -80,7 +80,6 @@ func main() {
 	// Set  the server certificate to encrypt the connection with TLS
 	ssl_certificate := *certDir + "/" + *hostname + ".cert.pem"
 	ssl_cert_key   := *certDir + "/" + *hostname + ".key.pem"
-	
 	check(server.ListenAndServeTLS(ssl_certificate, ssl_cert_key))
 }
 
