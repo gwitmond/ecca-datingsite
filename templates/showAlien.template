@@ -4,6 +4,7 @@
 </head>
 <body>
 {{ template "menu" }}
+
 <h1>The gory details</h1>
 <p>Here are the gory details of your chosen alien.<p>
 <table>
@@ -11,11 +12,26 @@
 <tr><th>Race</th><td>{{ .alien.GetRace }}</td></tr>
 <tr><th>Occupation</th><td>{{ .alien.GetOccupation }}</td></tr>
 </table>
-<p>If this was a real dating site, we would have more gory details. For now, if you have an account, you can compose a poem. If you don't have a profile, you are requested to create one first.</p>
+
+<h2>Write a Poem</h2>
+
+<p>If this was a real dating site, we would have more gory details. For now -- if you have an account -- you can compose a poem. If you don't have a profile, you are requested to create one first.</p>
 <p><form method="GET" action="/send-message">
 <input type="hidden" name="addressee" value="{{ .alien.CN }}">
 <input type="submit" value="Compose a Poem"></form></p>
-<p>Or <a href="/profile">create</a> a profile first.</p>
+
+<h2>Get them on the Horn</h2>
+
+<p>Is that nearby sun going supernova? Or is there a pack of spacelions tracking your ship's exhaust scent? Whatever reason, if you're in a hurry, press this big red button and get a direct connection.</p>
+
+<p><form method="POST" action="/initiate-direct-connection">
+<input type="hidden" name="initiate-direct-connection" value="required">
+<input type="hidden" name="addressee" value="{{ .alien.CN }}">
+<input type="hidden" name="certificate_url" value="{{ .IdURL }}">
+<input class="redbutton" type="submit" value="Get them on the Horn"></form></p>
+</form></p>
+
+<!-- <p>Or <a href="/profile">create</a> a profile first.</p> -->
 
 
 {{ template "tracking" }}

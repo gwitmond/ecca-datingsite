@@ -56,6 +56,8 @@ func init() {
 	http.Handle("/read-messages", ecca.LoggedInHandler(readMessages, "needToRegister.template"))
 	http.Handle("/send-message", ecca.LoggedInHandler(sendMessage, "needToRegister.template"))
 
+	http.Handle("/initiate-direct-connection", ecca.LoggedInHandler(initiateDirectConnection, "needToRegister.template"))
+
 	http.Handle("/static/", http.FileServer(http.Dir(".")))
 }
 
@@ -153,8 +155,22 @@ func showProfile (w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	check(templates.ExecuteTemplate(w, "showAlien.template", map[string]interface{}{
-		"alien": alien	}))
+		"alien": alien,
+		"IdURL": IdURL(cn),
+	}))
 }
+
+
+func IdURL (cn string) *url.URL {
+	url, err := url.Parse(*fpcaURL)
+	url.Path = "/get-certificate"
+	check(err)
+	q := url.Query()
+	q.Set("nickname", cn)
+	url.RawQuery = q.Encode()
+	return url
+}
+
 
 // readMessages shows you the messages other aliens have sent you.
 func readMessages (w http.ResponseWriter, req *http.Request) {
@@ -187,21 +203,11 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 	case "GET": 
 		req.ParseForm()
 		toCN := req.Form.Get("addressee")
-
-		// idURL 
-		// We do provide a path to the CA to let the user retrieve the public key of the recipient.
-		// User is free to obtain in other ways... :-)
-		idURL, err := url.Parse(*fpcaURL)
-		idURL.Path = "/get-certificate"
-		check(err)
-		q := idURL.Query()
-		q.Set("nickname", toCN)
-		idURL.RawQuery = q.Encode()
-
+		idURL := IdURL(toCN)
  		check(templates.ExecuteTemplate(w, "sendMessage.template", map[string]interface{}{
 			"CN": cn,            // from us
-			"ToCN": toCN,   // to recipient
-			"IdURL": idURL, // where to find the certificate with public key
+			"ToCN": toCN,        // to recipient
+			"IdURL": idURL,      // where to find the certificate with public key
 		}))
 
 	case "POST":
@@ -224,6 +230,41 @@ func sendMessage(w http.ResponseWriter, req *http.Request) {
 
 }
 
+
+// initiateDirectConnection instructs the ecca-proxy to
+// - set up a listener,
+// - invite the other via a private message
+// - and return a report to the user requesting the connection.
+func initiateDirectConnection(w http.ResponseWriter, req *http.Request) {
+	// get the inviter
+	cn := req.TLS.PeerCertificates[0].Subject.CommonName
+	switch req.Method {
+	case "POST":
+		req.ParseForm()
+
+		// ciphertext is the invitation made by the proxy that intercepted our request.
+		// It contains the invitation to toCN, store it and pray they call back.
+		ciphertext := req.Form.Get("ciphertext")
+		if ciphertext == "" {
+			w.Write([]byte(`<html><p>Your message was not encrypted. We won't accept it. Please use the ecca-proxy.</p></html>`))
+			return
+		}
+		saveMessage(Message{
+			FromCN: cn,
+			ToCN: req.Form.Get("addressee"),
+			Ciphertext: ciphertext,
+		})
+		// check(templates.ExecuteTemplate(w, "sendMessage.template", map[string]interface{}{
+		//      "CN": cn,            // from us
+		// 	"ToCN": toCN,        // to recipient
+		// 	"IdURL": idURL,      // where to find the certificate with public key
+		// }))
+		w.Write([]byte(`<html><p> The big wait....etc.<br>Expect report here.</p></html>`))
+
+	default:
+ 		http.Error(w, "Unexpected method", http.StatusMethodNotAllowed )
+	}
+}
 
 
 	
