@@ -22,7 +22,7 @@
 
 <h2>Get them on the Horn</h2>
 
-<p>Is that nearby sun going supernova? Or is there a pack of spacelions tracking your ship's exhaust scent? Whatever reason, if you're in a hurry, press this big red button and get a direct connection.</p>
+<p>Is that nearby sun going supernova? Or is there a pack of spacelions tracking your ship's exhaust scent? Whatever reason, if you're in a hurry, press this big button and invite them for a direct connection.</p>
 
 <p><form method="POST" action="/initiate-direct-connection">
 <input type="hidden" name="initiate-direct-connection" value="required">
