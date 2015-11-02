@@ -34,5 +34,4 @@
 <!-- <p>Or <a href="/profile">create</a> a profile first.</p> -->
 
 
-{{ template "tracking" }}
 </body></html>

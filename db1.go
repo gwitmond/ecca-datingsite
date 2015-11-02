@@ -10,20 +10,21 @@ import (
 	"log"
 )
 
-var dbFile = "datingdb.db"
 var db *sql.DB
-	
+
 func init() {
 	var err error
-	db, err = sql.Open("sqlite3", dbFile)
-	check(err)	
-	
+	log.Printf("opening database file: %v", *dbFile)
+	db, err = sql.Open("sqlite3", *dbFile)
+	check(err)
+
 	_, err = db.Exec("CREATE TABLE aliens (cn TEXT, race TEXT, occupation TEXT)")
 	// check(err) // ignore
 
 	_, err = db.Exec("CREATE TABLE messages (toCN TEXT, fromCN, ciphertext BLOB)")
 	// check(err) // ignore
 }
+
 
 // saveAlien inserts or updates an Alien record
 func saveAlien(alien Alien) {
@@ -34,7 +35,7 @@ func saveAlien(alien Alien) {
 		insert, err := db.Prepare("INSERT INTO aliens (cn, race, occupation) values (?, ?, ?)")
 		check(err)
 		defer insert.Close()
-		
+
 		result, err = insert.Exec(alien.CN, alien.Race, alien.Occupation)
 		check(err)
 	} else {

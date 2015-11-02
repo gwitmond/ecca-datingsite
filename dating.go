@@ -24,33 +24,34 @@ import (
 	//_ "github.com/mattn/go-sqlite3"
 )
 
+
 // The things to set before running.
-var certDir = flag.String("config", "cert", "Directory where the certificates and keys are found.") 
+var certDir = flag.String("config", "cert", "Directory where the certificates and keys are found.")
 var fpcaCert = flag.String("fpcaCert", "applicationFPCA.cert.pem", "File with the Certificate of the First Party Certificate Authority that we accept for our clients.")
 var fpcaURL = flag.String("fpcaURL", "https://register-application.example.nl", "URL of the First Party Certificate Authority where clients can get their certificate.")
 var hostname = flag.String("hostname", "application.example.nl", "Hostname of the application. Determines which cert.pem and key.pem are used for the TLS-connection.")
-var bindAddress = flag.String("bind", "[::]:443", "Address and port number where to bind the listening socket.") 
+var bindAddress = flag.String("bind", "[::]:443", "Address and port number where to bind the listening socket.")
+var dbFile =  flag.String("datastore", "/var/lib/ecca-dating/data/ecca-dating.sqlite3", "Path for the ecca-dating.sqlite3 datastore")
 
 // global state
 var ecca = eccentric.Authentication{}
- 
+
 var templates = template.Must(template.ParseFiles(
 	"templates/homepage.template",
 	"templates/editProfile.template",
 	"templates/aliens.template",
-	"templates/showAlien.template",	
+	"templates/showAlien.template",
 	"templates/readMessage.template",
 	"templates/sendMessage.template",
 	"templates/needToRegister.template",
-	"templates/menu.template",
-	"templates/tracking.template")) 
+	"templates/menu.template"))
 
 
 func init() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/aliens", showAliens)
 	http.HandleFunc("/show", showProfile)
-	
+
 	http.Handle("/profile", ecca.LoggedInHandler(editProfile, "needToRegister.template"))
 
 	http.Handle("/read-messages", ecca.LoggedInHandler(readMessages, "needToRegister.template"))
@@ -71,9 +72,9 @@ func main() {
 
 	// This CA-pool specifies which client certificates can log in to our site.
 	pool := eccentric.ReadCert( *certDir + "/" + *fpcaCert) // "datingLocalCA.cert.pem"
-	
+
 	log.Printf("Started at %s. Go to https://%s/ + port", *bindAddress, *hostname)
-	
+
 	server := &http.Server{Addr: *bindAddress,
 		TLSConfig: &tls.Config{
 			ClientCAs: pool,
@@ -100,7 +101,7 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 	// LoggedInHander made sure our user is logged in with a correct certificate
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
-	case "GET": 
+	case "GET":
 		alien := getAlien(cn)  // alien or nil
 		check(templates.ExecuteTemplate(w, "editProfile.template", map[string]interface{}{
 			"CN": cn,
@@ -119,7 +120,7 @@ func editProfile(w http.ResponseWriter, req *http.Request) {
 		//TODO: make a nice template with a menu and a redirect-link.
 		w.Write([]byte(`<html><p>Thank you for your entry. <a href="/aliens">Show all aliens.</a></p></html>`))
 
-	default: 
+	default:
 		http.Error(w, "Unexpected method", http.StatusMethodNotAllowed )
 	}
 }
@@ -177,7 +178,7 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 	// User is logged in
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
-	case "GET": 
+	case "GET":
 		// set this header to signal the user's Agent to perform data decryption.
 		w.Header().Set("Eccentric-Authentication", "decryption=\"required\"")
 		w.Header().Set("Content-Type", "text/html, charset=utf8")
@@ -186,7 +187,7 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 			"CN": cn,
 			"messages": messages,
 		}))
-		
+
 	default:
  		http.Error(w, "Unexpected method", http.StatusMethodNotAllowed )
 
@@ -200,7 +201,7 @@ func readMessages (w http.ResponseWriter, req *http.Request) {
 func sendMessage(w http.ResponseWriter, req *http.Request) {
 	cn := req.TLS.PeerCertificates[0].Subject.CommonName
 	switch req.Method {
-	case "GET": 
+	case "GET":
 		req.ParseForm()
 		toCN := req.Form.Get("addressee")
 		idURL := IdURL(toCN)
@@ -267,7 +268,7 @@ func initiateDirectConnection(w http.ResponseWriter, req *http.Request) {
 }
 
 
-	
+
 func check(err error) {
 	if err != nil {
 		panic(err)

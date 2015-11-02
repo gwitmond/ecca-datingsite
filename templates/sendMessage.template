@@ -13,5 +13,4 @@
 <textarea name="cleartext" rows="8" cols="80">I love the size of your ... ehm ... spaceship. Wanna dance?</textarea><br>
 <input type="submit" name="submit" value="Deliver">
 </form>
-{{ template "tracking" }}
 </body></html>
