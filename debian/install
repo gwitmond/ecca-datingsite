@@ -1,0 +1,5 @@
+ecca-datingsite   /usr/share/ecca-dating
+templates	  /usr/share/ecca-dating/
+static		  /usr/share/ecca-dating/
+
+packaging/*	  /

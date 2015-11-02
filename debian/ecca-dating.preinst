@@ -1,0 +1,8 @@
+# /bin/sh
+
+# Add the user if not there already
+
+if ! grep -q '^ecca_dating:' /etc/passwd
+then
+	adduser --system --disabled-login --no-create-home --group ecca_dating
+fi

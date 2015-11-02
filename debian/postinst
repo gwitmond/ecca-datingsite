@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+# let the dating site bind port 443 (or any other port specified).
+setcap 'cap_net_bind_service=+ep' /usr/share/ecca-dating/ecca-datingsite

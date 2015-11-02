@@ -1,0 +1,14 @@
+Source: ecca-dating
+Section: ecca
+Priority: extra
+Maintainer: Guido Witmond <guido@witmond.nl>
+Build-Depends: debhelper (>=9), golang-go (>=2:1.4)
+Standards-Version: 3.9.4
+Homepage: https://github.com/gwitmond/ecca-datingsite
+
+Package: ecca-dating
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Dating site demo for eccentric-authentication
+  This is the Dating Site demo for Eccentric-Authentication.
+  Eccentric-Authentication is an authentication and encryption protocol that makes cryptography usabe for anyone.
