@@ -28,6 +28,7 @@
 <input type="hidden" name="initiate-direct-connection" value="required">
 <input type="hidden" name="addressee" value="{{ .alien.CN }}">
 <input type="hidden" name="certificate_url" value="{{ .IdURL }}">
+<select name="application"><option value="chat">chat</option><option value="voice">voice</option></select>
 <input class="redbutton" type="submit" value="Get them on the Horn"></form></p>
 </form></p>
 
